@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { GeneratorPanel } from './features/generators/GeneratorPanel'
 import { createDefaultRegistry } from './modules/built-in'
 
@@ -5,7 +6,7 @@ const categories = [
   {
     label: 'Local',
     description: 'Utilitas yang berjalan langsung di perangkat.',
-    status: '1 generator aktif',
+    status: '2 generator aktif',
   },
   {
     label: 'Template',
@@ -20,20 +21,28 @@ const categories = [
 ]
 
 const registry = createDefaultRegistry()
+const localGenerators = registry.list({ kind: 'local' })
 
-function getDemoGenerator() {
-  const generator = registry.get('local.json-formatter')
+function getDefaultLocalGenerator() {
+  const generator = localGenerators[0]
 
   if (!generator) {
-    throw new Error('Default registry tidak memuat local.json-formatter.')
+    throw new Error('Default registry tidak memuat Local Generator.')
   }
 
   return generator
 }
 
-const demoGenerator = getDemoGenerator()
+const defaultLocalGenerator = getDefaultLocalGenerator()
 
 function App() {
+  const [selectedGeneratorId, setSelectedGeneratorId] = useState(
+    defaultLocalGenerator.definition.id,
+  )
+  const selectedGenerator =
+    localGenerators.find((generator) => generator.definition.id === selectedGeneratorId) ??
+    defaultLocalGenerator
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -71,10 +80,32 @@ function App() {
         ))}
       </section>
 
-      <GeneratorPanel generator={demoGenerator} />
+      <section className="generator-picker" aria-labelledby="generator-picker-title">
+        <div>
+          <p className="section-kicker">Coba sekarang</p>
+          <h2 id="generator-picker-title">Pilih Local Generator</h2>
+        </div>
+        <label className="picker-label" htmlFor="local-generator-select">
+          Generator
+        </label>
+        <select
+          className="generator-select"
+          id="local-generator-select"
+          value={selectedGenerator.definition.id}
+          onChange={(event) => setSelectedGeneratorId(event.target.value)}
+        >
+          {localGenerators.map((generator) => (
+            <option key={generator.definition.id} value={generator.definition.id}>
+              {generator.definition.name}
+            </option>
+          ))}
+        </select>
+      </section>
+
+      <GeneratorPanel key={selectedGenerator.definition.id} generator={selectedGenerator} />
 
       <footer className="footer-note">
-        <span>Fondasi proyek M0.4</span>
+        <span>Fondasi proyek M0.5</span>
         <span aria-hidden="true">•</span>
         <span>Demo generator berjalan tanpa network</span>
       </footer>

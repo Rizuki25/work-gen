@@ -62,6 +62,7 @@ export interface GeneratorDefinition {
   readonly outputTypes: readonly OutputType[]
   readonly capabilities: GeneratorCapabilities
   readonly executorRef: string
+  readonly primaryActionLabel?: string
   readonly enabled: boolean
   readonly featured?: boolean
 }

@@ -1,6 +1,13 @@
-import { useState, type FormEvent } from 'react'
+import {
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 import type {
+  GeneratorInput,
   GeneratorModule,
+  InputFieldDefinition,
   OutputType,
   ValidationIssue,
 } from '../../modules/contracts'
@@ -28,9 +35,46 @@ function outputExtension(outputType: OutputType | undefined): string {
   }
 }
 
+function initialInputValues(
+  fields: readonly InputFieldDefinition[],
+): Record<string, string> {
+  return Object.fromEntries(
+    fields.map((field) => {
+      if (field.defaultValue !== undefined) {
+        return [field.id, String(field.defaultValue)]
+      }
+
+      if (field.type === 'boolean') {
+        return [field.id, 'false']
+      }
+
+      if (field.type === 'enum') {
+        return [field.id, field.options?.[0]?.value ?? '']
+      }
+
+      return [field.id, '']
+    }),
+  )
+}
+
+function parseFieldValue(field: InputFieldDefinition, rawValue: string): unknown {
+  switch (field.type) {
+    case 'integer':
+      return rawValue.trim() === '' ? undefined : Number(rawValue)
+    case 'number':
+      return rawValue.trim() === '' ? undefined : Number(rawValue)
+    case 'boolean':
+      return rawValue === 'true'
+    default:
+      return rawValue
+  }
+}
+
 export function GeneratorPanel({ generator }: GeneratorPanelProps) {
-  const inputField = generator.definition.inputSchema.fields[0]
-  const [inputValue, setInputValue] = useState('')
+  const inputFields = generator.definition.inputSchema.fields
+  const [inputValues, setInputValues] = useState<Record<string, string>>(() =>
+    initialInputValues(inputFields),
+  )
   const [outputText, setOutputText] = useState<string | undefined>()
   const [outputType, setOutputType] = useState<OutputType | undefined>()
   const [outputMimeType, setOutputMimeType] = useState<string | undefined>()
@@ -38,7 +82,7 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
   const [runStatus, setRunStatus] = useState<RunStatus>('idle')
   const [actionMessage, setActionMessage] = useState<string | undefined>()
 
-  if (!inputField) {
+  if (inputFields.length === 0) {
     return (
       <section className="demo-section" aria-labelledby="generator-error-title">
         <p className="section-kicker">Generator error</p>
@@ -50,11 +94,96 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
     )
   }
 
+  function handleFieldChange(
+    field: InputFieldDefinition,
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+  ) {
+    const value = field.type === 'boolean'
+      ? event.target instanceof HTMLInputElement && event.target.checked
+        ? 'true'
+        : 'false'
+      : event.target.value
+
+    setInputValues((currentValues) => ({
+      ...currentValues,
+      [field.id]: value,
+    }))
+  }
+
+  function renderFieldInput(field: InputFieldDefinition): ReactNode {
+    const inputId = `generator-${field.id}`
+    const value = inputValues[field.id] ?? ''
+
+    if (field.type === 'multiline-text') {
+      return (
+        <textarea
+          id={inputId}
+          value={value}
+          onChange={(event) => handleFieldChange(field, event)}
+          placeholder={field.placeholder}
+          rows={8}
+          aria-describedby={`${inputId}-help`}
+        />
+      )
+    }
+
+    if (field.type === 'enum') {
+      return (
+        <select
+          id={inputId}
+          value={value}
+          onChange={(event) => handleFieldChange(field, event)}
+          aria-describedby={`${inputId}-help`}
+        >
+          {field.options?.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      )
+    }
+
+    if (field.type === 'boolean') {
+      return (
+        <label className="checkbox-field" htmlFor={inputId}>
+          <input
+            id={inputId}
+            type="checkbox"
+            checked={value === 'true'}
+            onChange={(event) => handleFieldChange(field, event)}
+            aria-describedby={`${inputId}-help`}
+          />
+          <span>{field.label}</span>
+        </label>
+      )
+    }
+
+    return (
+      <input
+        id={inputId}
+        type={field.type === 'integer' || field.type === 'number' ? 'number' : 'text'}
+        value={value}
+        onChange={(event) => handleFieldChange(field, event)}
+        placeholder={field.placeholder}
+        min={field.min}
+        max={field.max}
+        pattern={field.pattern}
+        aria-describedby={`${inputId}-help`}
+      />
+    )
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setActionMessage(undefined)
 
-    const input = { [inputField.id]: inputValue }
+    const input = Object.fromEntries(
+      inputFields.map((field) => [
+        field.id,
+        parseFieldValue(field, inputValues[field.id] ?? ''),
+      ]),
+    ) as GeneratorInput
     const validation = generator.validate(input)
 
     if (!validation.valid) {
@@ -109,7 +238,7 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
   }
 
   function handleReset() {
-    setInputValue('')
+    setInputValues(initialInputValues(inputFields))
     setOutputText(undefined)
     setOutputType(undefined)
     setOutputMimeType(undefined)
@@ -163,30 +292,41 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
 
       <div className="demo-layout">
         <form className="generator-form" onSubmit={handleSubmit}>
-          <label className="field-label" htmlFor={`generator-${inputField.id}`}>
-            {inputField.label}
-          </label>
-          <textarea
-            id={`generator-${inputField.id}`}
-            value={inputValue}
-            onChange={(event) => setInputValue(event.target.value)}
-            placeholder={inputField.placeholder}
-            rows={8}
-            aria-describedby={`generator-${inputField.id}-help`}
-          />
-          {inputField.helpText && (
-            <p className="field-help" id={`generator-${inputField.id}-help`}>
-              {inputField.helpText}
-            </p>
-          )}
-          {issue && (
+          {inputFields.map((field) => {
+            const inputId = `generator-${field.id}`
+            const fieldIssue = issue?.fieldId === field.id ? issue : undefined
+
+            return (
+              <div className="field-group" key={field.id}>
+                {field.type !== 'boolean' && (
+                  <label className="field-label" htmlFor={inputId}>
+                    {field.label}
+                  </label>
+                )}
+                {renderFieldInput(field)}
+                {field.helpText && (
+                  <p className="field-help" id={`${inputId}-help`}>
+                    {field.helpText}
+                  </p>
+                )}
+                {fieldIssue && (
+                  <p className="field-error" role="alert">
+                    {fieldIssue.message}
+                  </p>
+                )}
+              </div>
+            )
+          })}
+          {issue && !issue.fieldId && (
             <p className="field-error" role="alert">
               {issue.message}
             </p>
           )}
           <div className="form-actions">
             <button className="primary-button" type="submit" disabled={runStatus === 'running'}>
-              {runStatus === 'running' ? 'Memproses...' : 'Format JSON'}
+              {runStatus === 'running'
+                ? 'Memproses...'
+                : generator.definition.primaryActionLabel ?? 'Generate'}
             </button>
             <button className="secondary-button" type="button" onClick={handleReset}>
               Reset
@@ -196,11 +336,11 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
 
         <div className="output-panel" aria-live="polite">
           <div className="output-heading">
-            <span>Output JSON</span>
-            {runStatus === 'success' && <span className="success-label">Valid</span>}
+            <span>Output</span>
+            {runStatus === 'success' && <span className="success-label">Berhasil</span>}
           </div>
           {outputText === undefined ? (
-            <p className="output-empty">JSON terformat akan muncul di sini.</p>
+            <p className="output-empty">Output akan muncul di sini setelah generator dijalankan.</p>
           ) : (
             <>
               <pre className="output-content">{outputText}</pre>

@@ -193,6 +193,58 @@ h1 {
   box-shadow: 0 20px 48px rgba(16, 24, 40, 0.06);
 }
 
+.generator-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(220px, 300px);
+  align-items: end;
+  gap: 14px;
+  margin-top: 40px;
+  padding: 20px 22px;
+  border: 1px solid #e4e7ec;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.generator-picker h2 {
+  margin-bottom: 0;
+  color: #182230;
+  font-size: 1.15rem;
+  letter-spacing: -0.025em;
+}
+
+.picker-label {
+  padding-bottom: 10px;
+  color: #344054;
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.generator-select,
+input[type="text"],
+input[type="number"],
+select {
+  display: block;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  color: #182230;
+  font: inherit;
+  font-size: 0.88rem;
+  background: #ffffff;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.generator-select:focus,
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+  border-color: #315efb;
+  box-shadow: 0 0 0 4px rgba(49, 94, 251, 0.12);
+}
+
 .section-heading {
   display: flex;
   align-items: flex-start;
@@ -269,6 +321,27 @@ h1 {
   color: #344054;
   font-size: 0.85rem;
   font-weight: 750;
+}
+
+.field-group + .field-group {
+  margin-top: 18px;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  color: #344054;
+  font-size: 0.88rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.checkbox-field input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: #315efb;
 }
 
 textarea {
@@ -432,6 +505,15 @@ textarea:focus {
 
   .demo-section {
     padding: 22px;
+  }
+
+  .generator-picker {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .picker-label {
+    padding-bottom: 0;
   }
 
   .section-heading {
