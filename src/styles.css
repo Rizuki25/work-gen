@@ -401,7 +401,7 @@ textarea:focus {
   margin-top: 12px;
 }
 
-.copy-message {
+.action-message {
   color: #667085;
   font-size: 0.76rem;
 }

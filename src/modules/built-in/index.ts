@@ -1,6 +1,6 @@
 import { createBuiltInRegistry } from '../registry/create-built-in-registry'
-import { dummyTextGenerator } from './local/dummy-text-generator'
+import { jsonFormatterGenerator } from './local/json-formatter-generator'
 
 export function createDefaultRegistry() {
-  return createBuiltInRegistry([dummyTextGenerator])
+  return createBuiltInRegistry([jsonFormatterGenerator])
 }
