@@ -6,7 +6,7 @@ const categories = [
   {
     label: 'Local',
     description: 'Utilitas yang berjalan langsung di perangkat.',
-    status: '2 generator aktif',
+    status: '3 generator aktif',
   },
   {
     label: 'Template',
@@ -105,7 +105,7 @@ function App() {
       <GeneratorPanel key={selectedGenerator.definition.id} generator={selectedGenerator} />
 
       <footer className="footer-note">
-        <span>Fondasi proyek M0.5</span>
+        <span>Fondasi proyek M0.6</span>
         <span aria-hidden="true">•</span>
         <span>Demo generator berjalan tanpa network</span>
       </footer>
