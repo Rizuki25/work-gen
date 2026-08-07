@@ -1,8 +1,11 @@
+import { DummyGeneratorPanel } from './features/generators/DummyGeneratorPanel'
+import { createDefaultRegistry } from './modules/built-in'
+
 const categories = [
   {
     label: 'Local',
     description: 'Utilitas yang berjalan langsung di perangkat.',
-    status: 'Segera hadir',
+    status: '1 demo aktif',
   },
   {
     label: 'Template',
@@ -15,6 +18,20 @@ const categories = [
     status: 'Segera hadir',
   },
 ]
+
+const registry = createDefaultRegistry()
+
+function getDemoGenerator() {
+  const generator = registry.get('local.text-echo')
+
+  if (!generator) {
+    throw new Error('Default registry tidak memuat local.text-echo.')
+  }
+
+  return generator
+}
+
+const demoGenerator = getDemoGenerator()
 
 function App() {
   return (
@@ -54,10 +71,12 @@ function App() {
         ))}
       </section>
 
+      <DummyGeneratorPanel generator={demoGenerator} />
+
       <footer className="footer-note">
-        <span>Fondasi proyek M0.1</span>
+        <span>Fondasi proyek M0.3</span>
         <span aria-hidden="true">•</span>
-        <span>Belum ada data yang dikirim ke jaringan</span>
+        <span>Demo generator berjalan tanpa network</span>
       </footer>
     </main>
   )
