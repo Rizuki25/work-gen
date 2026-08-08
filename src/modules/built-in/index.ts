@@ -11,11 +11,13 @@ import { regexTesterGenerator } from './local/regex-tester-generator'
 import { textCounterGenerator } from './local/text-counter-generator'
 import { timestampConverterGenerator } from './local/timestamp-generator'
 import { uuidGenerator } from './local/uuid-generator'
+import { dailyReportGenerator } from './template/daily-report-generator'
 
 export function createDefaultRegistry() {
   return createBuiltInRegistry([
     base64Generator,
     csvJsonGenerator,
+    dailyReportGenerator,
     hashGenerator,
     jsonFormatterGenerator,
     jsonYamlGenerator,

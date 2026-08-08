@@ -184,7 +184,15 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
     return (
       <input
         id={inputId}
-        type={field.type === 'integer' || field.type === 'number' ? 'number' : 'text'}
+        type={
+          field.type === 'integer' || field.type === 'number'
+            ? 'number'
+            : field.type === 'date'
+              ? 'date'
+              : field.type === 'date-time'
+                ? 'datetime-local'
+                : 'text'
+        }
         value={value}
         onChange={(event) => handleFieldChange(field, event)}
         placeholder={hint.placeholder}
@@ -312,7 +320,9 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
           <h2 id="generator-title">{generator.definition.name}</h2>
           <p className="section-description">{generator.definition.description}</p>
         </div>
-        <span className="module-badge">Local · Offline</span>
+        <span className="module-badge">
+          {generator.definition.kind === 'template' ? 'Template · Offline' : 'Local · Offline'}
+        </span>
       </div>
 
       <div className="demo-layout">
@@ -374,7 +384,13 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
                   <img className="output-image" src={outputText} alt="QR Code output" />
                 </div>
               ) : (
-                <pre className="output-content">{outputText}</pre>
+                <textarea
+                  className="output-content output-editor"
+                  value={outputText}
+                  onChange={(event) => setOutputText(event.target.value)}
+                  aria-label="Editable output"
+                  spellCheck={false}
+                />
               )}
               <div className="output-actions">
                 {generator.definition.capabilities.copy && (

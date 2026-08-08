@@ -18,7 +18,7 @@ const categories = [
   {
     label: 'Template',
     description: 'Dokumen kerja konsisten dari form sederhana.',
-    status: 'Segera hadir',
+    status: '1 template aktif',
   },
   {
     label: 'AI',
@@ -31,10 +31,13 @@ const sidebarGroups = [
   { label: 'Text & Format', description: 'Teks dan struktur data' },
   { label: 'Data & Conversion', description: 'Konversi format lokal' },
   { label: 'Security & Random', description: 'Data sensitif dan random' },
+  { label: 'Reports', description: 'Template kerja terstruktur' },
 ]
 
 const registry = createDefaultRegistry()
 const localGenerators = registry.list({ kind: 'local' })
+const templateGenerators = registry.list({ kind: 'template' })
+const availableGenerators = [...localGenerators, ...templateGenerators]
 
 function getDefaultLocalGenerator() {
   const generator = localGenerators[0]
@@ -63,7 +66,7 @@ function App() {
   )
 
   const selectedGenerator =
-    localGenerators.find((generator) => generator.definition.id === selectedGeneratorId) ??
+    availableGenerators.find((generator) => generator.definition.id === selectedGeneratorId) ??
     defaultLocalGenerator
   const isHome = activeView === 'home'
   const isSettings = activeView === 'settings'
@@ -100,10 +103,10 @@ function App() {
   const filteredGenerators = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase()
     if (!query) {
-      return localGenerators
+      return availableGenerators
     }
 
-    return localGenerators.filter(({ definition }) =>
+    return availableGenerators.filter(({ definition }) =>
       [definition.name, definition.description, definition.category, ...definition.tags]
         .join(' ')
         .toLocaleLowerCase()
@@ -264,7 +267,7 @@ function App() {
           </button>
           <div className="page-title">
             <span className="page-title-icon" aria-hidden="true">
-              {isHome ? '⌂' : selectedGenerator.definition.icon ?? '•'}
+              {isSettings ? 'S' : isHome ? '⌂' : selectedGenerator.definition.icon ?? '•'}
             </span>
             <span>{isSettings ? 'Settings' : isHome ? 'Home' : selectedGenerator.definition.name}</span>
           </div>
@@ -319,7 +322,7 @@ function App() {
           ) : (
             <div className="feature-view">
               <div className="feature-breadcrumb" aria-label="Lokasi generator">
-                <span>Local</span>
+                <span>{selectedGenerator.definition.kind === 'template' ? 'Template' : 'Local'}</span>
                 <span aria-hidden="true">/</span>
                 <span>{selectedGenerator.definition.category}</span>
               </div>
@@ -329,10 +332,10 @@ function App() {
 
           <footer className="footer-note">
               <span>
-                {isHome ? 'Fondasi proyek M1.8' : isSettings ? 'Settings' : selectedGenerator.definition.name}
+                {isHome ? 'Fondasi proyek M2.1' : isSettings ? 'Settings' : selectedGenerator.definition.name}
               </span>
             <span aria-hidden="true">•</span>
-            <span>Generator lokal tidak mengirim data ke network</span>
+            <span>Local dan Template tidak mengirim data ke network</span>
           </footer>
         </div>
       </section>
