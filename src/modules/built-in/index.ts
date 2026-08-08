@@ -12,6 +12,7 @@ import { textCounterGenerator } from './local/text-counter-generator'
 import { timestampConverterGenerator } from './local/timestamp-generator'
 import { uuidGenerator } from './local/uuid-generator'
 import { dailyReportGenerator } from './template/daily-report-generator'
+import { weeklyReportGenerator } from './template/weekly-report-generator'
 
 export function createDefaultRegistry() {
   return createBuiltInRegistry([
@@ -28,5 +29,6 @@ export function createDefaultRegistry() {
     textCounterGenerator,
     timestampConverterGenerator,
     uuidGenerator,
+    weeklyReportGenerator,
   ])
 }
