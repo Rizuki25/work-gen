@@ -39,7 +39,20 @@ const definition: GeneratorDefinition = {
         label: 'Input data',
         required: true,
         placeholder: '{"name":"WorkGen","offline":true}',
-        helpText: 'Input diproses sepenuhnya di browser.',
+        helpText: 'Masukkan JSON yang ingin diubah menjadi YAML.',
+        hintByFieldValue: {
+          fieldId: 'mode',
+          values: {
+            'json-to-yaml': {
+              placeholder: '{"name":"WorkGen","offline":true}',
+              helpText: 'Masukkan JSON yang ingin diubah menjadi YAML.',
+            },
+            'yaml-to-json': {
+              placeholder: 'name: WorkGen\noffline: true',
+              helpText: 'Masukkan YAML yang ingin diubah menjadi JSON.',
+            },
+          },
+        },
       },
     ],
   },

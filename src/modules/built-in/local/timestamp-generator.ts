@@ -41,7 +41,20 @@ const definition: GeneratorDefinition = {
         label: 'Nilai input',
         required: true,
         placeholder: 'Contoh: 0 atau 2026-08-08T00:00:00Z',
-        helpText: 'Untuk tanggal, gunakan ISO 8601 agar hasil konsisten.',
+        helpText: 'Masukkan angka timestamp dalam unit yang dipilih.',
+        hintByFieldValue: {
+          fieldId: 'mode',
+          values: {
+            'timestamp-to-date': {
+              placeholder: 'Contoh: 0 atau 1723075200',
+              helpText: 'Masukkan angka timestamp dalam unit yang dipilih.',
+            },
+            'date-to-timestamp': {
+              placeholder: 'Contoh: 2026-08-08T00:00:00Z',
+              helpText: 'Masukkan tanggal ISO 8601 agar hasil konsisten.',
+            },
+          },
+        },
       },
       {
         id: 'unit',

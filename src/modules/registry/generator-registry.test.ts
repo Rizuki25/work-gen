@@ -125,6 +125,7 @@ describe('GeneratorRegistry', () => {
 
     expect(registry.get('local.json-formatter')?.definition.kind).toBe('local')
     expect(registry.search('json').map((module) => module.definition.id)).toEqual([
+      'local.csv-json',
       'local.json-yaml',
       'local.json-formatter',
     ])

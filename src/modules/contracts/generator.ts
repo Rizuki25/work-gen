@@ -21,6 +21,11 @@ export interface FieldOption {
   readonly label: string
 }
 
+export interface InputFieldHintVariant {
+  readonly placeholder?: string
+  readonly helpText?: string
+}
+
 export interface InputFieldDefinition {
   readonly id: string
   readonly type: InputFieldType
@@ -32,6 +37,10 @@ export interface InputFieldDefinition {
   readonly pattern?: string
   readonly placeholder?: string
   readonly helpText?: string
+  readonly hintByFieldValue?: {
+    readonly fieldId: string
+    readonly values: Readonly<Record<string, InputFieldHintVariant>>
+  }
   readonly secret?: boolean
   readonly options?: readonly FieldOption[]
 }

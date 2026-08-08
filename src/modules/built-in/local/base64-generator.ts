@@ -37,8 +37,21 @@ const definition: GeneratorDefinition = {
         type: 'multiline-text',
         label: 'Teks input',
         required: true,
-        placeholder: 'Masukkan teks atau nilai Base64...',
-        helpText: 'Encoding menggunakan UTF-8; whitespace pada Base64 decode diabaikan.',
+        placeholder: 'Contoh: WorkGen local-first',
+        helpText: 'Teks akan diubah menjadi Base64 menggunakan UTF-8.',
+        hintByFieldValue: {
+          fieldId: 'mode',
+          values: {
+            encode: {
+              placeholder: 'Contoh: WorkGen local-first',
+              helpText: 'Teks akan diubah menjadi Base64 menggunakan UTF-8.',
+            },
+            decode: {
+              placeholder: 'Contoh: V29ya0dlbiBsb2NhbC1maXJzdA==',
+              helpText: 'Masukkan Base64 valid; whitespace akan diabaikan saat decode.',
+            },
+          },
+        },
       },
     ],
   },

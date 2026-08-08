@@ -11,6 +11,7 @@ import type {
   OutputType,
   ValidationIssue,
 } from '../../modules/contracts'
+import { resolveFieldHint } from './field-hints'
 
 interface GeneratorPanelProps {
   readonly generator: GeneratorModule
@@ -112,7 +113,7 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
     }))
   }
 
-  function renderFieldInput(field: InputFieldDefinition): ReactNode {
+  function renderFieldInput(field: InputFieldDefinition, hint: ReturnType<typeof resolveFieldHint>): ReactNode {
     const inputId = `generator-${field.id}`
     const value = inputValues[field.id] ?? ''
 
@@ -122,7 +123,7 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
           id={inputId}
           value={value}
           onChange={(event) => handleFieldChange(field, event)}
-          placeholder={field.placeholder}
+          placeholder={hint.placeholder}
           rows={8}
           aria-describedby={`${inputId}-help`}
         />
@@ -167,7 +168,7 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
         type={field.type === 'integer' || field.type === 'number' ? 'number' : 'text'}
         value={value}
         onChange={(event) => handleFieldChange(field, event)}
-        placeholder={field.placeholder}
+        placeholder={hint.placeholder}
         min={field.min}
         max={field.max}
         pattern={field.pattern}
@@ -297,6 +298,7 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
           {inputFields.map((field) => {
             const inputId = `generator-${field.id}`
             const fieldIssue = issue?.fieldId === field.id ? issue : undefined
+            const hint = resolveFieldHint(field, inputValues)
 
             return (
               <div className="field-group" key={field.id}>
@@ -305,10 +307,10 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
                     {field.label}
                   </label>
                 )}
-                {renderFieldInput(field)}
-                {field.helpText && (
+                {renderFieldInput(field, hint)}
+                {hint.helpText && (
                   <p className="field-help" id={`${inputId}-help`}>
-                    {field.helpText}
+                    {hint.helpText}
                   </p>
                 )}
                 {fieldIssue && (
