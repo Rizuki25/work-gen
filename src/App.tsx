@@ -18,7 +18,7 @@ const categories = [
   {
     label: 'Template',
     description: 'Dokumen kerja konsisten dari form sederhana.',
-    status: '4 template aktif',
+    status: '5 template aktif',
   },
   {
     label: 'AI',
@@ -32,6 +32,7 @@ const sidebarGroups = [
   { label: 'Data & Conversion', description: 'Konversi format lokal' },
   { label: 'Security & Random', description: 'Data sensitif dan random' },
   { label: 'Reports', description: 'Template kerja terstruktur' },
+  { label: 'Documents', description: 'Prosedur dan dokumen kerja' },
 ]
 
 const registry = createDefaultRegistry()
@@ -332,7 +333,7 @@ function App() {
 
           <footer className="footer-note">
               <span>
-                {isHome ? 'Fondasi proyek M2.4' : isSettings ? 'Settings' : selectedGenerator.definition.name}
+                {isHome ? 'Fondasi proyek M2.5' : isSettings ? 'Settings' : selectedGenerator.definition.name}
               </span>
             <span aria-hidden="true">•</span>
             <span>Local dan Template tidak mengirim data ke network</span>
