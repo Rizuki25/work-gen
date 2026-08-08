@@ -1,12 +1,31 @@
 import type { AppSettings, AppTheme, DefaultOutputFormat } from '../../modules/settings/app-settings'
+import type { ProviderTestConnectionResult } from '../../modules/providers/openai-compatible-adapter'
+import { ProviderSettings } from './ProviderSettings'
+import type { ProviderConfig, ProviderDraft } from '../../modules/providers/provider-store'
 
 interface SettingsPanelProps {
   readonly settings: AppSettings
   readonly onChange: (settings: AppSettings) => void
   readonly onReset: () => void
+  readonly providers: readonly ProviderConfig[]
+  readonly onSaveProvider: (draft: ProviderDraft) => void
+  readonly onDeleteProvider: (providerId: string) => void
+  readonly onSetDefaultProvider: (providerId: string) => void
+  readonly onTestProviderConnection: (draft: ProviderDraft) => Promise<ProviderTestConnectionResult>
+  readonly hasProviderApiKey: (apiKeyRef: string) => boolean
 }
 
-export function SettingsPanel({ settings, onChange, onReset }: SettingsPanelProps) {
+export function SettingsPanel({
+  settings,
+  onChange,
+  onReset,
+  providers,
+  onSaveProvider,
+  onDeleteProvider,
+  onSetDefaultProvider,
+  onTestProviderConnection,
+  hasProviderApiKey,
+}: SettingsPanelProps) {
   function updateSetting<Key extends keyof AppSettings>(key: Key, value: AppSettings[Key]) {
     onChange({ ...settings, [key]: value })
   }
@@ -112,15 +131,16 @@ export function SettingsPanel({ settings, onChange, onReset }: SettingsPanelProp
               <p className="section-kicker">AI Providers</p>
               <h2 id="provider-title">Provider pilihan Anda</h2>
             </div>
-            <span className="module-badge">Segera hadir</span>
+            <span className="module-badge">Foundation</span>
           </div>
-          <div className="settings-empty">
-            <strong>Belum ada provider AI</strong>
-            <p>
-              Local Generator tetap berjalan tanpa provider. Konfigurasi Base URL, model, dan API
-              key akan ditambahkan pada tahap AI foundation.
-            </p>
-          </div>
+          <ProviderSettings
+            providers={providers}
+            onSave={onSaveProvider}
+            onDelete={onDeleteProvider}
+            onSetDefault={onSetDefaultProvider}
+            onTestConnection={onTestProviderConnection}
+            hasApiKey={hasProviderApiKey}
+          />
         </section>
       </div>
 

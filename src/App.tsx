@@ -8,6 +8,19 @@ import {
   saveAppSettings,
   type AppSettings,
 } from './modules/settings/app-settings'
+import {
+  createMemorySecretStore,
+  createProviderConfig,
+  loadProviderConfigs,
+  saveProviderConfigs,
+  validateProviderDraft,
+  type ProviderConfig,
+  type ProviderDraft,
+} from './modules/providers/provider-store'
+import {
+  testProviderConnection,
+  type ProviderTestConnectionResult,
+} from './modules/providers/openai-compatible-adapter'
 
 const categories = [
   {
@@ -51,6 +64,7 @@ function getDefaultLocalGenerator() {
 }
 
 const defaultLocalGenerator = getDefaultLocalGenerator()
+const providerSecretStore = createMemorySecretStore()
 type AppView = 'home' | 'generator' | 'settings'
 
 function App() {
@@ -62,6 +76,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isOnline, setIsOnline] = useState(() => navigator.onLine)
   const [settings, setSettings] = useState<AppSettings>(() => loadAppSettings())
+  const [providers, setProviders] = useState<ProviderConfig[]>(() => loadProviderConfigs())
   const [systemPrefersLight, setSystemPrefersLight] = useState(() =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: light)').matches,
   )
@@ -90,6 +105,10 @@ function App() {
   useEffect(() => {
     saveAppSettings(settings)
   }, [settings])
+
+  useEffect(() => {
+    saveProviderConfigs(providers)
+  }, [providers])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: light)')
@@ -132,11 +151,99 @@ function App() {
   }
 
   function handleResetSettings() {
-    if (!window.confirm('Reset semua preferensi WorkGen? File output Anda tidak akan dihapus.')) {
+    if (!window.confirm('Reset semua preferensi dan provider WorkGen? File output Anda tidak akan dihapus.')) {
       return
     }
 
     setSettings(createDefaultAppSettings())
+    setProviders([])
+    providerSecretStore.clear()
+  }
+
+  function handleSaveProvider(draft: ProviderDraft) {
+    const existing = providers.find((provider) => provider.id === draft.id)
+    const requireApiKey = existing ? !providerSecretStore.has(existing.apiKeyRef) : true
+    const validation = validateProviderDraft(draft, { requireApiKey })
+
+    if (!validation.valid) {
+      return
+    }
+
+    const isDefault = existing?.isDefault === true ||
+      (existing === undefined && (providers.length === 0 || settings.defaultProviderId === null))
+    const provider = createProviderConfig(draft, existing, new Date(), isDefault)
+
+    if (draft.apiKey.trim().length > 0) {
+      providerSecretStore.set(provider.apiKeyRef, draft.apiKey)
+    }
+
+    setProviders((currentProviders) => {
+      const nextProviders = currentProviders.some((item) => item.id === provider.id)
+        ? currentProviders.map((item) => item.id === provider.id ? provider : item)
+        : [...currentProviders, provider]
+
+      return nextProviders.map((item) => ({
+        ...item,
+        isDefault: provider.isDefault ? item.id === provider.id : item.isDefault,
+      }))
+    })
+
+    if (isDefault) {
+      setSettings((currentSettings) => ({
+        ...currentSettings,
+        defaultProviderId: provider.id,
+      }))
+    }
+  }
+
+  function handleDeleteProvider(providerId: string) {
+    const provider = providers.find((item) => item.id === providerId)
+    if (!provider || !window.confirm(`Hapus konfigurasi provider "${provider.displayName}"?`)) {
+      return
+    }
+
+    providerSecretStore.delete(provider.apiKeyRef)
+    const remainingProviders = providers.filter((item) => item.id !== providerId)
+    const nextDefaultId = provider.isDefault ? remainingProviders[0]?.id ?? null : settings.defaultProviderId
+
+    setProviders(remainingProviders.map((item, index) => ({
+      ...item,
+      isDefault: nextDefaultId === item.id || (nextDefaultId === null && index === 0),
+    })))
+    setSettings((currentSettings) => ({
+      ...currentSettings,
+      defaultProviderId: nextDefaultId,
+    }))
+  }
+
+  function handleSetDefaultProvider(providerId: string) {
+    setProviders((currentProviders) => currentProviders.map((provider) => ({
+      ...provider,
+      isDefault: provider.id === providerId,
+    })))
+    setSettings((currentSettings) => ({
+      ...currentSettings,
+      defaultProviderId: providerId,
+    }))
+  }
+
+  async function handleTestProviderConnection(
+    draft: ProviderDraft,
+  ): Promise<ProviderTestConnectionResult> {
+    const existing = providers.find((provider) => provider.id === draft.id)
+    const apiKey = draft.apiKey.trim().length > 0
+      ? draft.apiKey
+      : existing
+        ? providerSecretStore.get(existing.apiKeyRef)
+        : undefined
+    const provider = createProviderConfig(
+      draft,
+      existing,
+      new Date(),
+      existing?.isDefault ?? false,
+    )
+
+    return testProviderConnection(provider, apiKey, { isOnline })
   }
 
   return (
@@ -319,6 +426,12 @@ function App() {
               settings={settings}
               onChange={setSettings}
               onReset={handleResetSettings}
+              providers={providers}
+              onSaveProvider={handleSaveProvider}
+              onDeleteProvider={handleDeleteProvider}
+              onSetDefaultProvider={handleSetDefaultProvider}
+              onTestProviderConnection={handleTestProviderConnection}
+              hasProviderApiKey={(apiKeyRef) => providerSecretStore.has(apiKeyRef)}
             />
           ) : (
             <div className="feature-view">
