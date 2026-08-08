@@ -124,7 +124,10 @@ describe('GeneratorRegistry', () => {
     const registry = createDefaultRegistry()
 
     expect(registry.get('local.json-formatter')?.definition.kind).toBe('local')
-    expect(registry.search('json')).toHaveLength(1)
+    expect(registry.search('json').map((module) => module.definition.id)).toEqual([
+      'local.json-yaml',
+      'local.json-formatter',
+    ])
   })
 
   it('menolak duplicate id', () => {

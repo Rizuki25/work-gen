@@ -12,7 +12,7 @@ export type InputFieldType =
   | 'list'
   | 'object'
 
-export type OutputType = 'plain-text' | 'markdown' | 'json' | 'csv' | 'html' | 'png'
+export type OutputType = 'plain-text' | 'markdown' | 'json' | 'yaml' | 'csv' | 'html' | 'png'
 
 export type GeneratorInput = Readonly<Record<string, unknown>>
 

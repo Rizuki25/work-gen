@@ -1,6 +1,7 @@
 import { base64Generator } from './local/base64-generator'
 import { createBuiltInRegistry } from '../registry/create-built-in-registry'
 import { hashGenerator } from './local/hash-generator'
+import { jsonYamlGenerator } from './local/json-yaml-generator'
 import { jsonFormatterGenerator } from './local/json-formatter-generator'
 import { passwordGenerator } from './local/password-generator'
 import { textCounterGenerator } from './local/text-counter-generator'
@@ -12,6 +13,7 @@ export function createDefaultRegistry() {
     base64Generator,
     hashGenerator,
     jsonFormatterGenerator,
+    jsonYamlGenerator,
     passwordGenerator,
     textCounterGenerator,
     timestampConverterGenerator,

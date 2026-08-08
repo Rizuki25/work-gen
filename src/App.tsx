@@ -6,7 +6,7 @@ const categories = [
   {
     label: 'Local',
     description: 'Utilitas yang berjalan langsung di perangkat.',
-    status: '7 generator aktif',
+    status: '8 generator aktif',
   },
   {
     label: 'Template',
@@ -268,7 +268,7 @@ function App() {
           )}
 
           <footer className="footer-note">
-            <span>{isHome ? 'Fondasi proyek M1.1' : selectedGenerator.definition.name}</span>
+            <span>{isHome ? 'Fondasi proyek M1.3' : selectedGenerator.definition.name}</span>
             <span aria-hidden="true">•</span>
             <span>Generator lokal tidak mengirim data ke network</span>
           </footer>

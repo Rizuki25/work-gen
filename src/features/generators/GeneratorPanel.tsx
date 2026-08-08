@@ -22,6 +22,8 @@ function outputExtension(outputType: OutputType | undefined): string {
   switch (outputType) {
     case 'json':
       return 'json'
+    case 'yaml':
+      return 'yaml'
     case 'markdown':
       return 'md'
     case 'csv':
