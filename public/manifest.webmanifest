@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "WorkGen",
+  "short_name": "WorkGen",
+  "description": "Kotak alat kerja pribadi yang cepat, privat, dan local-first.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06150b",
+  "theme_color": "#06150b",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

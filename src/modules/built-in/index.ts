@@ -4,6 +4,7 @@ import { hashGenerator } from './local/hash-generator'
 import { jsonFormatterGenerator } from './local/json-formatter-generator'
 import { passwordGenerator } from './local/password-generator'
 import { textCounterGenerator } from './local/text-counter-generator'
+import { timestampConverterGenerator } from './local/timestamp-generator'
 import { uuidGenerator } from './local/uuid-generator'
 
 export function createDefaultRegistry() {
@@ -13,6 +14,7 @@ export function createDefaultRegistry() {
     jsonFormatterGenerator,
     passwordGenerator,
     textCounterGenerator,
+    timestampConverterGenerator,
     uuidGenerator,
   ])
 }

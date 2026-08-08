@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { GeneratorPanel } from './features/generators/GeneratorPanel'
 import { createDefaultRegistry } from './modules/built-in'
 
@@ -6,7 +6,7 @@ const categories = [
   {
     label: 'Local',
     description: 'Utilitas yang berjalan langsung di perangkat.',
-    status: '6 generator aktif',
+    status: '7 generator aktif',
   },
   {
     label: 'Template',
@@ -49,11 +49,25 @@ function App() {
   )
   const [searchQuery, setSearchQuery] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine)
 
   const selectedGenerator =
     localGenerators.find((generator) => generator.definition.id === selectedGeneratorId) ??
     defaultLocalGenerator
   const isHome = activeView === 'home'
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   const filteredGenerators = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase()
@@ -167,8 +181,8 @@ function App() {
 
         <footer className="sidebar-footer">
           <span className="sidebar-footer-status">
-            <span className="status-dot" aria-hidden="true" />
-            Offline-ready
+            <span className={`status-dot ${isOnline ? '' : 'is-offline'}`} aria-hidden="true" />
+            {isOnline ? 'Online · Local-first' : 'Offline · Local-ready'}
           </span>
           <span>{localGenerators.length} local tools available</span>
         </footer>
@@ -201,8 +215,8 @@ function App() {
             <span>{isHome ? 'Home' : selectedGenerator.definition.name}</span>
           </div>
           <span className="header-status">
-            <span className="status-dot" aria-hidden="true" />
-            Local-first
+            <span className={`status-dot ${isOnline ? '' : 'is-offline'}`} aria-hidden="true" />
+            {isOnline ? 'Online · Local-first' : 'Offline · Local tools available'}
           </span>
         </header>
 
@@ -254,7 +268,7 @@ function App() {
           )}
 
           <footer className="footer-note">
-            <span>{isHome ? 'Fondasi proyek M0.9' : selectedGenerator.definition.name}</span>
+            <span>{isHome ? 'Fondasi proyek M1.1' : selectedGenerator.definition.name}</span>
             <span aria-hidden="true">•</span>
             <span>Generator lokal tidak mengirim data ke network</span>
           </footer>

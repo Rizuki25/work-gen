@@ -333,6 +333,11 @@ textarea:focus-visible {
   box-shadow: 0 0 0 4px rgba(200, 222, 118, 0.1);
 }
 
+.status-dot.is-offline {
+  background: var(--accent-strong);
+  box-shadow: 0 0 0 4px rgba(241, 200, 75, 0.1);
+}
+
 .main-area {
   display: flex;
   min-width: 0;
