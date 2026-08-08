@@ -4,6 +4,7 @@ import { csvJsonGenerator } from './local/csv-json-generator'
 import { hashGenerator } from './local/hash-generator'
 import { jsonYamlGenerator } from './local/json-yaml-generator'
 import { jsonFormatterGenerator } from './local/json-formatter-generator'
+import { loremDummyGenerator } from './local/lorem-dummy-generator'
 import { passwordGenerator } from './local/password-generator'
 import { regexTesterGenerator } from './local/regex-tester-generator'
 import { textCounterGenerator } from './local/text-counter-generator'
@@ -17,6 +18,7 @@ export function createDefaultRegistry() {
     hashGenerator,
     jsonFormatterGenerator,
     jsonYamlGenerator,
+    loremDummyGenerator,
     passwordGenerator,
     regexTesterGenerator,
     textCounterGenerator,
