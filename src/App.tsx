@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { GeneratorPanel } from './features/generators/GeneratorPanel'
+import { SettingsPanel } from './features/settings/SettingsPanel'
 import { createDefaultRegistry } from './modules/built-in'
+import {
+  createDefaultAppSettings,
+  loadAppSettings,
+  saveAppSettings,
+  type AppSettings,
+} from './modules/settings/app-settings'
 
 const categories = [
   {
@@ -40,7 +47,7 @@ function getDefaultLocalGenerator() {
 }
 
 const defaultLocalGenerator = getDefaultLocalGenerator()
-type AppView = 'home' | 'generator'
+type AppView = 'home' | 'generator' | 'settings'
 
 function App() {
   const [activeView, setActiveView] = useState<AppView>('home')
@@ -50,11 +57,18 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isOnline, setIsOnline] = useState(() => navigator.onLine)
+  const [settings, setSettings] = useState<AppSettings>(() => loadAppSettings())
+  const [systemPrefersLight, setSystemPrefersLight] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: light)').matches,
+  )
 
   const selectedGenerator =
     localGenerators.find((generator) => generator.definition.id === selectedGeneratorId) ??
     defaultLocalGenerator
   const isHome = activeView === 'home'
+  const isSettings = activeView === 'settings'
+  const resolvedTheme =
+    settings.theme === 'system' ? (systemPrefersLight ? 'light' : 'dark') : settings.theme
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true)
@@ -67,6 +81,20 @@ function App() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
+  }, [])
+
+  useEffect(() => {
+    saveAppSettings(settings)
+  }, [settings])
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: light)')
+    const handleThemeChange = (event: MediaQueryListEvent) => setSystemPrefersLight(event.matches)
+
+    setSystemPrefersLight(mediaQuery.matches)
+    mediaQuery.addEventListener('change', handleThemeChange)
+
+    return () => mediaQuery.removeEventListener('change', handleThemeChange)
   }, [])
 
   const filteredGenerators = useMemo(() => {
@@ -94,8 +122,21 @@ function App() {
     setSidebarOpen(false)
   }
 
+  function handleSettings() {
+    setActiveView('settings')
+    setSidebarOpen(false)
+  }
+
+  function handleResetSettings() {
+    if (!window.confirm('Reset semua preferensi WorkGen? File output Anda tidak akan dihapus.')) {
+      return
+    }
+
+    setSettings(createDefaultAppSettings())
+  }
+
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-theme={resolvedTheme}>
       <aside className={`sidebar ${sidebarOpen ? 'is-open' : ''}`}>
         <div className="sidebar-brand">
           <a className="brand" href="/" aria-label="WorkGen home">
@@ -134,6 +175,18 @@ function App() {
             <span>Home</span>
           </button>
 
+          <button
+            className={`sidebar-home sidebar-settings ${isSettings ? 'active' : ''}`}
+            type="button"
+            onClick={handleSettings}
+            aria-current={isSettings ? 'page' : undefined}
+          >
+            <span className="sidebar-tool-icon" aria-hidden="true">
+              S
+            </span>
+            <span>Settings</span>
+          </button>
+
           {sidebarGroups.map((group) => {
             const tools = filteredGenerators.filter(
               (generator) => generator.definition.category === group.label,
@@ -152,7 +205,8 @@ function App() {
                 <div className="sidebar-tool-list">
                   {tools.map((generator) => {
                     const isSelected =
-                      !isHome && generator.definition.id === selectedGenerator.definition.id
+                      activeView === 'generator' &&
+                      generator.definition.id === selectedGenerator.definition.id
 
                     return (
                       <button
@@ -212,7 +266,7 @@ function App() {
             <span className="page-title-icon" aria-hidden="true">
               {isHome ? '⌂' : selectedGenerator.definition.icon ?? '•'}
             </span>
-            <span>{isHome ? 'Home' : selectedGenerator.definition.name}</span>
+            <span>{isSettings ? 'Settings' : isHome ? 'Home' : selectedGenerator.definition.name}</span>
           </div>
           <span className="header-status">
             <span className={`status-dot ${isOnline ? '' : 'is-offline'}`} aria-hidden="true" />
@@ -256,6 +310,12 @@ function App() {
                 ))}
               </section>
             </>
+          ) : isSettings ? (
+            <SettingsPanel
+              settings={settings}
+              onChange={setSettings}
+              onReset={handleResetSettings}
+            />
           ) : (
             <div className="feature-view">
               <div className="feature-breadcrumb" aria-label="Lokasi generator">
@@ -268,7 +328,9 @@ function App() {
           )}
 
           <footer className="footer-note">
-              <span>{isHome ? 'Fondasi proyek M1.7' : selectedGenerator.definition.name}</span>
+              <span>
+                {isHome ? 'Fondasi proyek M1.8' : isSettings ? 'Settings' : selectedGenerator.definition.name}
+              </span>
             <span aria-hidden="true">•</span>
             <span>Generator lokal tidak mengirim data ke network</span>
           </footer>
