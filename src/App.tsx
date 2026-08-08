@@ -18,7 +18,7 @@ const categories = [
   {
     label: 'Template',
     description: 'Dokumen kerja konsisten dari form sederhana.',
-    status: '5 template aktif',
+    status: '6 template aktif',
   },
   {
     label: 'AI',

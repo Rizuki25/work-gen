@@ -13,6 +13,7 @@ import { timestampConverterGenerator } from './local/timestamp-generator'
 import { uuidGenerator } from './local/uuid-generator'
 import { dailyReportGenerator } from './template/daily-report-generator'
 import { businessEmailGenerator } from './template/business-email-generator'
+import { invoiceGenerator } from './template/invoice-generator'
 import { meetingMinutesGenerator } from './template/meeting-minutes-generator'
 import { sopGenerator } from './template/sop-generator'
 import { weeklyReportGenerator } from './template/weekly-report-generator'
@@ -24,6 +25,7 @@ export function createDefaultRegistry() {
     csvJsonGenerator,
     dailyReportGenerator,
     hashGenerator,
+    invoiceGenerator,
     jsonFormatterGenerator,
     jsonYamlGenerator,
     loremDummyGenerator,
