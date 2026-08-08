@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useState,
   type ChangeEvent,
   type FormEvent,
@@ -11,10 +12,13 @@ import type {
   OutputType,
   ValidationIssue,
 } from '../../modules/contracts'
+import type { GeneratorAiRuntime } from '../../modules/contracts'
+import { AiDataBoundaryNotice } from '../ai/AiDataBoundaryNotice'
 import { resolveFieldHint } from './field-hints'
 
 interface GeneratorPanelProps {
   readonly generator: GeneratorModule
+  readonly aiRuntime?: GeneratorAiRuntime
 }
 
 type RunStatus = 'idle' | 'running' | 'success'
@@ -92,8 +96,9 @@ function dataUrlToBlob(dataUrl: string, fallbackMimeType: string): Blob | undefi
   return new Blob([bytes], { type: mimeType })
 }
 
-export function GeneratorPanel({ generator }: GeneratorPanelProps) {
+export function GeneratorPanel({ generator, aiRuntime }: GeneratorPanelProps) {
   const inputFields = generator.definition.inputSchema.fields
+  const isAiGenerator = generator.definition.kind === 'ai'
   const [inputValues, setInputValues] = useState<Record<string, string>>(() =>
     initialInputValues(inputFields),
   )
@@ -103,6 +108,11 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
   const [issue, setIssue] = useState<ValidationIssue | undefined>()
   const [runStatus, setRunStatus] = useState<RunStatus>('idle')
   const [actionMessage, setActionMessage] = useState<string | undefined>()
+  const [aiConsentGiven, setAiConsentGiven] = useState(false)
+
+  useEffect(() => {
+    setAiConsentGiven(false)
+  }, [aiRuntime?.provider?.id])
 
   if (inputFields.length === 0) {
     return (
@@ -208,6 +218,30 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
     event.preventDefault()
     setActionMessage(undefined)
 
+    if (isAiGenerator && !aiRuntime?.provider) {
+      setIssue({
+        code: 'provider-required',
+        message: 'Pilih dan konfigurasi provider AI di Settings terlebih dahulu.',
+      })
+      setOutputText(undefined)
+      setOutputType(undefined)
+      setOutputMimeType(undefined)
+      setRunStatus('idle')
+      return
+    }
+
+    if (isAiGenerator && !aiConsentGiven) {
+      setIssue({
+        code: 'consent-required',
+        message: 'Setujui data boundary sebelum mengirim instruksi ke provider AI.',
+      })
+      setOutputText(undefined)
+      setOutputType(undefined)
+      setOutputMimeType(undefined)
+      setRunStatus('idle')
+      return
+    }
+
     const input = Object.fromEntries(
       inputFields.map((field) => [
         field.id,
@@ -236,6 +270,8 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
         locale: 'id-ID',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         now: () => new Date(),
+        ai: aiRuntime,
+        aiConsentGiven,
       })
 
       if (result.status === 'success') {
@@ -275,6 +311,7 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
     setIssue(undefined)
     setActionMessage(undefined)
     setRunStatus('idle')
+    setAiConsentGiven(false)
   }
 
   async function handleCopy() {
@@ -316,17 +353,47 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
     <section className="demo-section" aria-labelledby="generator-title">
       <div className="section-heading">
         <div>
-          <p className="section-kicker">Local Generator</p>
+          <p className="section-kicker">
+            {generator.definition.kind === 'ai'
+              ? 'AI Generator'
+              : generator.definition.kind === 'template'
+                ? 'Template Generator'
+                : 'Local Generator'}
+          </p>
           <h2 id="generator-title">{generator.definition.name}</h2>
           <p className="section-description">{generator.definition.description}</p>
         </div>
         <span className="module-badge">
-          {generator.definition.kind === 'template' ? 'Template · Offline' : 'Local · Offline'}
+          {generator.definition.kind === 'ai'
+            ? 'AI · Consent required'
+            : generator.definition.kind === 'template'
+              ? 'Template · Offline'
+              : 'Local · Offline'}
         </span>
       </div>
 
       <div className="demo-layout">
         <form className="generator-form" onSubmit={handleSubmit}>
+          {isAiGenerator && (
+            aiRuntime?.provider ? (
+              <AiDataBoundaryNotice
+                providerDisplayName={aiRuntime.provider.displayName}
+                model={aiRuntime.provider.model}
+                baseUrl={aiRuntime.provider.baseUrl}
+                dataDescription={`Input dan opsi output pada form ${generator.definition.name}.`}
+                consentGiven={aiConsentGiven}
+                onConsentChange={(consentGiven) => {
+                  setAiConsentGiven(consentGiven)
+                  setIssue(undefined)
+                }}
+              />
+            ) : (
+              <div className="ai-provider-empty" role="status">
+                <strong>Provider AI belum dipilih.</strong>
+                <p>Buka Settings → AI Providers untuk menambahkan dan memilih provider.</p>
+              </div>
+            )
+          )}
           {inputFields.map((field) => {
             const inputId = `generator-${field.id}`
             const fieldIssue = issue?.fieldId === field.id ? issue : undefined

@@ -1,3 +1,6 @@
+import type { AiGenerationRequest, AiGenerationResult } from '../ai/ai-service'
+import type { ProviderConfig } from '../providers/provider-store'
+
 export type GeneratorKind = 'local' | 'template' | 'ai'
 
 export type InputFieldType =
@@ -92,6 +95,15 @@ export interface GeneratorExecutionContext {
   readonly timezone: string
   readonly now: () => Date
   readonly signal?: AbortSignal
+  readonly ai?: GeneratorAiRuntime
+  readonly aiConsentGiven?: boolean
+}
+
+export type GeneratorAiRequest = Omit<AiGenerationRequest, 'provider' | 'apiKey'>
+
+export interface GeneratorAiRuntime {
+  readonly provider?: ProviderConfig
+  readonly generate: (request: GeneratorAiRequest) => Promise<AiGenerationResult>
 }
 
 export interface GeneratorOutput {

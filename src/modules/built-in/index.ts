@@ -1,5 +1,6 @@
 import { base64Generator } from './local/base64-generator'
 import { createBuiltInRegistry } from '../registry/create-built-in-registry'
+import { freeformTextGenerator } from './ai/freeform-text-generator'
 import { csvJsonGenerator } from './local/csv-json-generator'
 import { hashGenerator } from './local/hash-generator'
 import { jsonYamlGenerator } from './local/json-yaml-generator'
@@ -20,6 +21,7 @@ import { weeklyReportGenerator } from './template/weekly-report-generator'
 
 export function createDefaultRegistry() {
   return createBuiltInRegistry([
+    freeformTextGenerator,
     base64Generator,
     businessEmailGenerator,
     csvJsonGenerator,

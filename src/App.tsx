@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { GeneratorPanel } from './features/generators/GeneratorPanel'
 import { SettingsPanel } from './features/settings/SettingsPanel'
+import { generateWithAi } from './modules/ai/ai-service'
 import { createDefaultRegistry } from './modules/built-in'
+import type { GeneratorAiRuntime } from './modules/contracts'
 import {
   createDefaultAppSettings,
   loadAppSettings,
@@ -36,7 +38,7 @@ const categories = [
   {
     label: 'AI',
     description: 'Bantuan opsional dengan provider pilihan Anda.',
-    status: 'Segera hadir',
+    status: '1 generator aktif',
   },
 ]
 
@@ -46,12 +48,14 @@ const sidebarGroups = [
   { label: 'Security & Random', description: 'Data sensitif dan random' },
   { label: 'Reports', description: 'Template kerja terstruktur' },
   { label: 'Documents', description: 'Prosedur dan dokumen kerja' },
+  { label: 'AI', description: 'Bantuan opsional dengan provider' },
 ]
 
 const registry = createDefaultRegistry()
 const localGenerators = registry.list({ kind: 'local' })
 const templateGenerators = registry.list({ kind: 'template' })
-const availableGenerators = [...localGenerators, ...templateGenerators]
+const aiGenerators = registry.list({ kind: 'ai' })
+const availableGenerators = [...localGenerators, ...templateGenerators, ...aiGenerators]
 
 function getDefaultLocalGenerator() {
   const generator = localGenerators[0]
@@ -88,6 +92,18 @@ function App() {
   const isSettings = activeView === 'settings'
   const resolvedTheme =
     settings.theme === 'system' ? (systemPrefersLight ? 'light' : 'dark') : settings.theme
+  const selectedAiProvider = providers.find((provider) => provider.id === settings.defaultProviderId) ??
+    providers.find((provider) => provider.isDefault)
+  const aiRuntime: GeneratorAiRuntime = {
+    provider: selectedAiProvider,
+    generate: (request) => generateWithAi({
+      ...request,
+      provider: selectedAiProvider,
+      apiKey: selectedAiProvider
+        ? providerSecretStore.get(selectedAiProvider.apiKeyRef)
+        : undefined,
+    }, { isOnline }),
+  }
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true)
@@ -440,7 +456,11 @@ function App() {
                 <span aria-hidden="true">/</span>
                 <span>{selectedGenerator.definition.category}</span>
               </div>
-              <GeneratorPanel key={selectedGenerator.definition.id} generator={selectedGenerator} />
+              <GeneratorPanel
+                key={selectedGenerator.definition.id}
+                generator={selectedGenerator}
+                aiRuntime={aiRuntime}
+              />
             </div>
           )}
 
@@ -449,7 +469,11 @@ function App() {
                 {isHome ? 'Fondasi proyek M2.5' : isSettings ? 'Settings' : selectedGenerator.definition.name}
               </span>
             <span aria-hidden="true">•</span>
-            <span>Local dan Template tidak mengirim data ke network</span>
+            <span>
+              {selectedGenerator.definition.kind === 'ai'
+                ? 'AI mengirim data hanya setelah consent'
+                : 'Local dan Template tidak mengirim data ke network'}
+            </span>
           </footer>
         </div>
       </section>

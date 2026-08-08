@@ -31,6 +31,29 @@ export type ProviderTestConnectionResult =
       readonly error: ProviderConnectionError
     }
 
+export interface ChatMessage {
+  readonly role: 'system' | 'user' | 'assistant'
+  readonly content: string
+}
+
+export interface ChatCompletionRequest {
+  readonly messages: readonly ChatMessage[]
+  readonly maxOutputTokens?: number
+  readonly temperature?: number
+}
+
+export type ChatCompletionResult =
+  | {
+      readonly status: 'success'
+      readonly text: string
+      readonly model: string
+      readonly latencyMs: number
+    }
+  | {
+      readonly status: 'failed'
+      readonly error: ProviderConnectionError
+    }
+
 export interface ProviderTestConnectionOptions {
   readonly fetchImpl?: typeof fetch
   readonly isOnline?: boolean
@@ -40,7 +63,7 @@ export interface ProviderTestConnectionOptions {
 
 interface ChatCompletionPayload {
   readonly model: string
-  readonly messages: readonly [{ readonly role: 'user'; readonly content: string }]
+  readonly messages: readonly ChatMessage[]
   readonly max_tokens: number
   readonly temperature: number
 }
@@ -130,17 +153,24 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
-function hasChatCompletionContent(value: unknown): boolean {
+function getChatCompletionContent(value: unknown): { readonly text: string; readonly model?: string } | undefined {
   if (!isRecord(value) || !Array.isArray(value.choices) || value.choices.length === 0) {
-    return false
+    return undefined
   }
 
   const firstChoice = value.choices[0]
   if (!isRecord(firstChoice) || !isRecord(firstChoice.message)) {
-    return false
+    return undefined
   }
 
-  return typeof firstChoice.message.content === 'string'
+  if (typeof firstChoice.message.content !== 'string') {
+    return undefined
+  }
+
+  return {
+    text: firstChoice.message.content,
+    model: typeof value.model === 'string' ? value.model : undefined,
+  }
 }
 
 async function readJson(response: Response): Promise<unknown> {
@@ -151,14 +181,38 @@ async function readJson(response: Response): Promise<unknown> {
   }
 }
 
-export async function testProviderConnection(
+export async function requestChatCompletion(
   provider: ProviderConfig,
   apiKey: string | undefined,
+  request: ChatCompletionRequest,
   options: ProviderTestConnectionOptions = {},
-): Promise<ProviderTestConnectionResult> {
+): Promise<ChatCompletionResult> {
   const validationError = validateConnectionInput(provider, apiKey)
   if (validationError) {
     return { status: 'failed', error: validationError }
+  }
+
+  if (request.messages.length === 0) {
+    return {
+      status: 'failed',
+      error: createError('validation', 'Minimal satu message diperlukan untuk request AI.', false),
+    }
+  }
+
+  const maxOutputTokens = request.maxOutputTokens ?? provider.maxOutputTokens
+  const temperature = request.temperature ?? provider.temperature
+  if (!Number.isFinite(maxOutputTokens) || maxOutputTokens < 1) {
+    return {
+      status: 'failed',
+      error: createError('validation', 'Max output tokens harus lebih besar dari 0.', false),
+    }
+  }
+
+  if (!Number.isFinite(temperature) || temperature < 0 || temperature > 2) {
+    return {
+      status: 'failed',
+      error: createError('validation', 'Temperature harus berada di antara 0 dan 2.', false),
+    }
   }
 
   if (options.isOnline === false) {
@@ -189,9 +243,9 @@ export async function testProviderConnection(
   const startedAt = now()
   const payload: ChatCompletionPayload = {
     model: provider.model.trim(),
-    messages: [{ role: 'user', content: 'Respond with OK only.' }],
-    max_tokens: 1,
-    temperature: 0,
+    messages: request.messages,
+    max_tokens: Math.floor(maxOutputTokens),
+    temperature,
   }
 
   try {
@@ -211,7 +265,8 @@ export async function testProviderConnection(
     }
 
     const responseBody = await readJson(response)
-    if (!hasChatCompletionContent(responseBody)) {
+    const completion = getChatCompletionContent(responseBody)
+    if (!completion) {
       return {
         status: 'failed',
         error: createError(
@@ -222,17 +277,14 @@ export async function testProviderConnection(
       }
     }
 
-    const responseModel = isRecord(responseBody) && typeof responseBody.model === 'string'
-      ? responseBody.model
-      : provider.model
-
     return {
       status: 'success',
-      model: responseModel,
+      text: completion.text,
+      model: completion.model ?? provider.model,
       latencyMs: Math.max(0, now() - startedAt),
     }
   } catch (error) {
-    if (timedOut || (error instanceof DOMException && error.name === 'AbortError')) {
+    if (timedOut || isAbortError(error)) {
       return {
         status: 'failed',
         error: createError('timeout', 'Provider tidak merespons dalam batas waktu.', true),
@@ -246,5 +298,36 @@ export async function testProviderConnection(
   } finally {
     clearTimeout(timeoutId)
     options.signal?.removeEventListener('abort', abortHandler)
+  }
+}
+
+function isAbortError(error: unknown): boolean {
+  return isRecord(error) && error.name === 'AbortError'
+}
+
+export async function testProviderConnection(
+  provider: ProviderConfig,
+  apiKey: string | undefined,
+  options: ProviderTestConnectionOptions = {},
+): Promise<ProviderTestConnectionResult> {
+  const result = await requestChatCompletion(
+    provider,
+    apiKey,
+    {
+      messages: [{ role: 'user', content: 'Respond with OK only.' }],
+      maxOutputTokens: 1,
+      temperature: 0,
+    },
+    options,
+  )
+
+  if (result.status === 'failed') {
+    return result
+  }
+
+  return {
+    status: 'success',
+    model: result.model,
+    latencyMs: result.latencyMs,
   }
 }
