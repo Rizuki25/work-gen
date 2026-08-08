@@ -6,6 +6,7 @@ import { jsonYamlGenerator } from './local/json-yaml-generator'
 import { jsonFormatterGenerator } from './local/json-formatter-generator'
 import { loremDummyGenerator } from './local/lorem-dummy-generator'
 import { passwordGenerator } from './local/password-generator'
+import { qrCodeGenerator } from './local/qr-code-generator'
 import { regexTesterGenerator } from './local/regex-tester-generator'
 import { textCounterGenerator } from './local/text-counter-generator'
 import { timestampConverterGenerator } from './local/timestamp-generator'
@@ -20,6 +21,7 @@ export function createDefaultRegistry() {
     jsonYamlGenerator,
     loremDummyGenerator,
     passwordGenerator,
+    qrCodeGenerator,
     regexTesterGenerator,
     textCounterGenerator,
     timestampConverterGenerator,

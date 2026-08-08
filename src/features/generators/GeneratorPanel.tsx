@@ -73,6 +73,25 @@ function parseFieldValue(field: InputFieldDefinition, rawValue: string): unknown
   }
 }
 
+function dataUrlToBlob(dataUrl: string, fallbackMimeType: string): Blob | undefined {
+  const separatorIndex = dataUrl.indexOf(',')
+  if (separatorIndex < 0) {
+    return undefined
+  }
+
+  const metadata = dataUrl.slice(0, separatorIndex)
+  const encodedContent = dataUrl.slice(separatorIndex + 1)
+  if (!metadata.includes(';base64')) {
+    return undefined
+  }
+
+  const binaryContent = globalThis.atob(encodedContent)
+  const bytes = Uint8Array.from(binaryContent, (character) => character.charCodeAt(0))
+  const mimeType = metadata.match(/^data:([^;]+)/)?.[1] ?? fallbackMimeType
+
+  return new Blob([bytes], { type: mimeType })
+}
+
 export function GeneratorPanel({ generator }: GeneratorPanelProps) {
   const inputFields = generator.definition.inputSchema.fields
   const [inputValues, setInputValues] = useState<Record<string, string>>(() =>
@@ -268,7 +287,10 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
       return
     }
 
-    const blob = new Blob([outputText], {
+    const imageBlob = outputType === 'png'
+      ? dataUrlToBlob(outputText, outputMimeType ?? 'image/png')
+      : undefined
+    const blob = imageBlob ?? new Blob([outputText], {
       type: outputMimeType ?? 'text/plain;charset=utf-8',
     })
     const url = URL.createObjectURL(blob)
@@ -347,7 +369,13 @@ export function GeneratorPanel({ generator }: GeneratorPanelProps) {
             <p className="output-empty">Output akan muncul di sini setelah generator dijalankan.</p>
           ) : (
             <>
-              <pre className="output-content">{outputText}</pre>
+              {outputType === 'png' ? (
+                <div className="output-image-frame">
+                  <img className="output-image" src={outputText} alt="QR Code output" />
+                </div>
+              ) : (
+                <pre className="output-content">{outputText}</pre>
+              )}
               <div className="output-actions">
                 {generator.definition.capabilities.copy && (
                   <button className="secondary-button" type="button" onClick={handleCopy}>

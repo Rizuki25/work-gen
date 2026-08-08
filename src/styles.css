@@ -791,6 +791,24 @@ textarea:focus {
   border-radius: 3px;
 }
 
+.output-image-frame {
+  display: grid;
+  min-height: 180px;
+  padding: 18px;
+  place-items: center;
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+}
+
+.output-image {
+  display: block;
+  width: min(100%, 420px);
+  height: auto;
+  image-rendering: pixelated;
+}
+
 .output-actions {
   margin-top: 11px;
 }
