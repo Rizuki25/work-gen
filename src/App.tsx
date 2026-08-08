@@ -18,7 +18,7 @@ const categories = [
   {
     label: 'Template',
     description: 'Dokumen kerja konsisten dari form sederhana.',
-    status: '3 template aktif',
+    status: '4 template aktif',
   },
   {
     label: 'AI',
@@ -332,7 +332,7 @@ function App() {
 
           <footer className="footer-note">
               <span>
-                {isHome ? 'Fondasi proyek M2.3' : isSettings ? 'Settings' : selectedGenerator.definition.name}
+                {isHome ? 'Fondasi proyek M2.4' : isSettings ? 'Settings' : selectedGenerator.definition.name}
               </span>
             <span aria-hidden="true">•</span>
             <span>Local dan Template tidak mengirim data ke network</span>

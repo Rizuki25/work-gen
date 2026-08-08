@@ -12,12 +12,14 @@ import { textCounterGenerator } from './local/text-counter-generator'
 import { timestampConverterGenerator } from './local/timestamp-generator'
 import { uuidGenerator } from './local/uuid-generator'
 import { dailyReportGenerator } from './template/daily-report-generator'
+import { businessEmailGenerator } from './template/business-email-generator'
 import { meetingMinutesGenerator } from './template/meeting-minutes-generator'
 import { weeklyReportGenerator } from './template/weekly-report-generator'
 
 export function createDefaultRegistry() {
   return createBuiltInRegistry([
     base64Generator,
+    businessEmailGenerator,
     csvJsonGenerator,
     dailyReportGenerator,
     hashGenerator,
